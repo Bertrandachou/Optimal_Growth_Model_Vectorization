@@ -1,3 +1,6 @@
+from __future__ import division
+import numpy as np
+
 # -*- coding: utf-8 -*-
 """
 Created on Wed Apr 17 11:07:54 2013
@@ -8,14 +11,10 @@ Created on Wed Apr 17 11:07:54 2013
 """ This is the deterministic optimal growth model"""
 
 
-"""from __future__ import division"""
-
-import numpy as np
 
 """first we create a dictionary containing all our parameters of the model"""
 
-
-p = {'alpha': 0.3, 'beta': 0.95, 'sigma': 1, 'delta': 0.3, 'A': 1 }
+p = {'alpha': 0.3, 'beta': 0.95, 'sigma': 1, 'delta': 1, 'A': 1 }
 
 
 """ we then define the parameters of the grid in a list and the lists needed"""
@@ -55,26 +54,30 @@ def production(k,p):
     
     
 def new_value(k,kp,V0,p,pgrid):
-    # compute the new value function corresponding for a grid k
-    # similar for k and kprime
+    # computes the new value function for k
+    # given the matrix kp which is similar to k 
+    # except that values are ordered in column (k is ordered in rows and is square)
     # knowing that the former guess on the value function was V0
     # and for a given dictionnary of parameters p
     
     # we use Boolean indexing checking the values kprime
     # that satisfy the constraint
+    # when the resource constraint is not satisfied we impose a large penalty 
+    # to the representative agent to ensure that he will never choose these 
+    # values
     
     
     new_V             = np.zeros(pgrid['n'])    
     
-    DV0               = np.array([V0 for i in range(pgrid['n'])])
+    DV0               = np.array([[V0[i] for j in range(pgrid['n'])] for i in range(pgrid['n'])])
     
-    budget_not        = ((production(k,p) + (1 - p['delta']) * k - kp) < 0)
+    budget_not        = ((production(k,p) + (1 - p['delta']) * k - kp) < 0)  # looks if the constraint is NOT satisfied
     
-    DV0[budget_not]   = -999999999999
+    DV0[budget_not]   = -999999999999  #gives a large penalty no to satisfy the constraint
     
     ctemp             = production(k,p) + (1 - p['delta']) * k - kp
     
-    ctemp[budget_not] = 0.001
+    ctemp[budget_not] = 0.001          #gives a large penalty no to satisfy the constraint
     
     Vtemp             = utility(ctemp,p) + p['beta'] * DV0
     
@@ -94,6 +97,7 @@ def new_value(k,kp,V0,p,pgrid):
 
 crit    = 100
 epsilon = 10**(-6)
+
 kgrid2 = np.linspace(pgrid['kmin'],pgrid['kmax'],pgrid['n'])
 
 import pylab
@@ -104,29 +108,6 @@ while crit > epsilon:
     V = new_value(kgrid,kpgrid,V0,p,pgrid)
     crit = max(abs(V-V0))
     V0 = V
+    
    
-    
-    
 pylab.plot(kgrid2,V)
-
-
-    
-
-
-
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
