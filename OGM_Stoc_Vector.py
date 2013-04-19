@@ -26,7 +26,7 @@ kss = ( (1 - p['beta'] * (1 - p['delta']) ) / (p['alpha'] * p['beta']) )**( 1 / 
 sd  = 0.9
 
 
-pgrid = { 'n': 10, 'kmin': kss*(1-sd), 'kmax': kss*(1+sd) }
+pgrid = { 'n': 100, 'kmin': kss*(1-sd), 'kmax': kss*(1+sd) }
 
 Agrid = np.array([[[shock['A'][i] for j in xrange(pgrid['n'])] for k in xrange(pgrid['n'])] for i in xrange(len(shock['A']))])
 
@@ -79,7 +79,7 @@ def new_value(k,kp,V0,p,pgrid,A,shock):
     # values
     
     
-    new_V0 = np.array([ [ np.zeros(pgrid['n']) for k in xrange(pgrid['n']) ] for j in xrange(len(shock['A']))] )   
+    new_V0 = np.array([ [ np.zeros(pgrid['n']) for z in xrange(pgrid['n']) ] for j in xrange(len(shock['A']))] )   
 
     budget_not           = ((production(k,p,A) + (1 - p['delta']) * k - kp) < 0)
     
@@ -89,11 +89,17 @@ def new_value(k,kp,V0,p,pgrid,A,shock):
    
     utemp               = utility(ctemp,p)
     
-    TV0                 = np.array([ [ np.linspace(V0[i,0,k],V0[i,0,k],pgrid['n']) for k in xrange(pgrid['n']) ] for i in xrange(len(shock['A'])) ] )
+    
+    TV0                 = np.array([ [ np.linspace(V0[i,0,z],V0[i,0,z],pgrid['n']) for z in xrange(pgrid['n']) ] for i in xrange(len(shock['A'])) ] )
+    
+    
     
     for i in xrange(len(shock['A'])):
         
-        utemp[i] = utemp[i] + p['beta'] * (sum( [shock['transit'][i,j]*TV0[j] for j in range(len(shock['A'])) ] ))
+        for j in xrange(len(shock['A'])):
+            
+            utemp[i] += p['beta'] *  shock['transit'][i,j] * TV0[j]
+    
     
     
     utemp[budget_not] = -99999999
@@ -101,15 +107,13 @@ def new_value(k,kp,V0,p,pgrid,A,shock):
     Vtemp        = utemp.reshape(len(shock['A']),pgrid['n']*pgrid['n'])
     
 
-
     for i in xrange(len(shock['A'])):
-        
-        for j in xrange(pgrid['n']):
+                
+        for z in xrange(pgrid['n']):
             
-            new_V0[i,:,j] = max(Vtemp[i][j::pgrid['n']])
+            new_V0[i,:,z] = max(Vtemp[i][z::pgrid['n']])
             
-        
-        
+             
     return new_V0
     
 
@@ -123,21 +127,19 @@ while crit > epsilon:
     
     grid_new  = new_value(kgrid,kpgrid,V0,p,pgrid,Agrid,shock)
     
-    critmat      = abs(V0-grid_new).reshape(1,pgrid['n']*pgrid['n']*len(shock['A']))
+    critmat      = abs(V0[:,0,:]-grid_new[:,0,:]).reshape(1,pgrid['n']*len(shock['A']))
     crit         = max(critmat[0])
     
     
     V0        = grid_new
-    
 
 
 
+  
+import pylab
 
-    
-#import pylab
-
-#kgrid2 = np.linspace(pgrid['kmin'],pgrid['kmax'],pgrid['n'])
+kgrid2 = np.linspace(pgrid['kmin'],pgrid['kmax'],pgrid['n'])
    
-#pylab.plot(kgrid2,V0[0,:,0])
-#pylab.plot(kgrid2,V01)
+pylab.plot(kgrid2,V0[0,0,:])
+pylab.plot(kgrid2,V0[1,0,:])
 
