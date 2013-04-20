@@ -1,0 +1,1326 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing onehalf
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\topmargin 3cm
+\rightmargin 2cm
+\bottommargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Section*
+Stochastic Version of the Optimal Growth Using Vectorization
+\end_layout
+
+\begin_layout Standard
+This note presents the main steps of the algorith which can be found at:
+\end_layout
+
+\begin_layout Standard
+https://github.com/Bertrandachou/Optimal_Growth_Model_Stochastic_Vectorization/bl
+ob/master/OGM_Stoc_Vector.py.
+\end_layout
+
+\begin_layout Standard
+We encourage you before reading this to get familiar with Python by, for
+ instance, do the tutorial at:
+\end_layout
+
+\begin_layout Standard
+http://www.codecademy.com/tracks/python
+\end_layout
+
+\begin_layout Standard
+or by going to the website of John Stachurski (http://johnstachurski.net/lectures
+/index.html).
+ Of course, these are one of many sources and one can find other good ways
+ for an introduction to Python.
+ 
+\end_layout
+
+\begin_layout Standard
+Also to get familiar with the concept of vectorization and some of the difficult
+ies arising from it, the reading of a chapter such as chapter 5 of 
+\shape italic
+A primer on Scientific Python 
+\shape default
+by H.P.
+ Langtanten is an excellent first step.
+ 
+\end_layout
+
+\begin_layout Subsection*
+The Model
+\end_layout
+
+\begin_layout Standard
+The model is the well-known optimal growth model.
+ In this model a representative agent maximizes the following expected utility:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\mathbb{E}_{0}\sum_{t=0}^{\infty}\beta^{t}u\left(c_{t}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+subject to the resource constraint:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+f\left(k_{t},A_{t}\right)+\left(1-\delta\right)k_{t}-k_{t+1}-c_{t}\geq0
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $c_{t}$
+\end_inset
+
+ denotes consumption in 
+\begin_inset Formula $t$
+\end_inset
+
+, 
+\begin_inset Formula $\beta<1$
+\end_inset
+
+ is a discount factor, 
+\begin_inset Formula $k_{t}$
+\end_inset
+
+ is the level of capital at the begining of the period 
+\begin_inset Formula $t$
+\end_inset
+
+, 
+\begin_inset Formula $A_{t}$
+\end_inset
+
+ is the level of productivity in 
+\begin_inset Formula $t$
+\end_inset
+
+ and 
+\begin_inset Formula $\delta$
+\end_inset
+
+ is the depreciation rate.
+ 
+\begin_inset Formula $u\left(.\right)$
+\end_inset
+
+ is the utility function and 
+\begin_inset Formula $f\left(.,.\right)$
+\end_inset
+
+ is the production function.
+ We assume in the program that these functions have the following forms:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+u\left(c\right)=\begin{cases}
+\frac{c^{1-\sigma}}{1-\sigma} & \mathrm{for\;\sigma>1}\\
+\log\left(c\right) & \mathrm{for}\;\sigma=1
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+f\left(k,A\right)=Ak^{\alpha}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Assuming that the only source of uncertainty in the model stems from 
+\begin_inset Formula $A_{t}$
+\end_inset
+
+ and that this latter follows a Markov chain, it is well-know that this
+ problem has a recursive structure of the following form:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+V\left(k_{t},A_{t}\right)=\max_{k_{t+1}}u\left(c_{t}\right)+\beta\mathbb{E}_{t}V\left(k_{t+1},A_{t+1}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\mathrm{s.t\;}f\left(k_{t},A_{t}\right)+\left(1-\delta\right)k_{t}-k_{t+1}-c_{t}\geq0
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with 
+\begin_inset Formula $V\left(k,A\right)$
+\end_inset
+
+ being the value function associated with level of initial capital 
+\begin_inset Formula $k$
+\end_inset
+
+ and productivity 
+\begin_inset Formula $A$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection*
+Finding a Global Solution
+\end_layout
+
+\begin_layout Standard
+Thanks to the contraction mapping theorem, we know that one way of finding
+ the value function for the different combinations of 
+\begin_inset Formula $k$
+\end_inset
+
+ and 
+\begin_inset Formula $A$
+\end_inset
+
+ is the following.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Make any initial guess denoted 
+\begin_inset Formula $V_{0}\left(k,A\right)$
+\end_inset
+
+ for every 
+\begin_inset Formula $A$
+\end_inset
+
+ and 
+\begin_inset Formula $k$
+\end_inset
+
+ in the grids.
+\end_layout
+
+\begin_layout Enumerate
+Compute 
+\begin_inset Formula $TV\left(k,A\right)=\max_{k^{\prime}}u\left(c\right)+\beta\mathbb{E}_{A}V_{0}\left(k^{\prime},A^{\prime}\right)$
+\end_inset
+
+ s.t.
+ 
+\begin_inset Formula $f\left(k,A\right)+\left(1-\delta\right)k-k^{\prime}-c\geq0$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Compute the difference between 
+\begin_inset Formula $\mathrm{crit}=|TV\left(k,A\right)-V_{0}\left(k,A\right)|$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Set 
+\begin_inset Formula $V_{0}\left(k,A\right)=TV\left(k,A\right)$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+If the difference 
+\begin_inset Formula $\mathrm{crit}$
+\end_inset
+
+ is smaller that some threshold 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+, then stop.
+ Else go back to 2.
+\end_layout
+
+\begin_layout Subsection*
+Using Vectorization to Solve the Problem
+\end_layout
+
+\begin_layout Standard
+A fundamental step in this type of resolution is to build the initial grids.
+ Indeed, the aim of using vectorization is to avoid as much as possible
+ loops (to make the program run faster) and this is done by building large
+ vectors (using numpy in Python).
+ Having these big vectors stored in one single part of the memory avoids
+ to have the computer looking for the elements it needs.
+ This saves a lot of time.
+ However, one should not modify the number of elements of a vector as it
+ is done at a substantial computational cost.
+ So before proceeding one needs to think well of the shape of the vectors
+ (which are quite large).
+\end_layout
+
+\begin_layout Standard
+There will be in 
+\begin_inset Formula $n$
+\end_inset
+
+ possible level of capital in our model 
+\begin_inset Formula $\left\{ k_{i}\right\} _{i=0}^{n-1}$
+\end_inset
+
+ (we start from zero as the first element of a list or of a vector in Python
+ is 
+\begin_inset Formula $0$
+\end_inset
+
+).
+ And we assume that there are 
+\begin_inset Formula $m$
+\end_inset
+
+ possible level of productivity 
+\begin_inset Formula $\left\{ A_{j}\right\} _{j=0}^{m-1}$
+\end_inset
+
+ and that productivity follows a Markov chain with 
+\begin_inset Formula $p_{ij}$
+\end_inset
+
+ denoting the probability of moving to the level of productivity 
+\begin_inset Formula $j$
+\end_inset
+
+ knowing that the former level of productivity was 
+\begin_inset Formula $i$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+What we call 
+\begin_inset Formula $kgrid$
+\end_inset
+
+ in the program is the grid for the initial level of capital.
+ We give it the following form:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+k_{0} & ... & k_{n-1}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+k_{0} & ... & k_{n-1}
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+k_{0} & ... & k_{n-1}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+k_{0} & ... & k_{n-1}
+\end{array}\right]
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With 
+\begin_inset Formula $m$
+\end_inset
+
+ matrices 
+\begin_inset Formula $\left[\begin{array}{ccc}
+k_{0} & ... & k_{n}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+k_{0} & ... & k_{n}
+\end{array}\right]$
+\end_inset
+
+ inside, each of these matrices being of size 
+\begin_inset Formula $n\times n$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+This is because we know that there are 
+\begin_inset Formula $m$
+\end_inset
+
+ levels of productivity, 
+\begin_inset Formula $n$
+\end_inset
+
+ levels of inital capital and 
+\begin_inset Formula $n$
+\end_inset
+
+ levels of possible next period capital.
+ This gives us a 
+\begin_inset Formula $kgrid$
+\end_inset
+
+ with 
+\begin_inset Formula $m\times n\times n$
+\end_inset
+
+ elements.
+ The form of our 
+\begin_inset Formula $Agrid$
+\end_inset
+
+ matrix is then straightforward:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+A_{0} & ... & A_{0}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+A_{0} & ... & A_{0}
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+A_{m-1} & ... & A_{m-1}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+A_{m-1} & ... & A_{m-1}
+\end{array}\right]
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With matrices 
+\begin_inset Formula $\left[\begin{array}{ccc}
+A_{i} & ... & A_{i}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+A_{i} & ... & A_{i}
+\end{array}\right]$
+\end_inset
+
+ being of size 
+\begin_inset Formula $n\times n$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset Formula $kpgrid$
+\end_inset
+
+ matrix is similar to the 
+\begin_inset Formula $kgrid$
+\end_inset
+
+ matrix but the elements 
+\begin_inset Formula $k_{i}^{\prime}$
+\end_inset
+
+ are ordered in column:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+k_{0}^{\prime} & ... & k_{0}^{\prime}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+k_{n-1}^{\prime} & ... & k_{n-1}^{\prime}
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+k_{0}^{\prime} & ... & k_{0}^{\prime}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+k_{n-1}^{\prime} & ... & k_{n-1}^{\prime}
+\end{array}\right]
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We know from our resource constraint that 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $c=f\left(k,A\right)+\left(1-\delta\right)k-k^{\prime}$
+\end_inset
+
+.
+ Having defined 
+\begin_inset Formula $f$
+\end_inset
+
+ it is very easy to compute 
+\begin_inset Formula $c$
+\end_inset
+
+ for every 
+\begin_inset Formula $k$
+\end_inset
+
+, 
+\begin_inset Formula $k^{\prime}$
+\end_inset
+
+ and 
+\begin_inset Formula $A$
+\end_inset
+
+ using our grid.
+ Indeed by doing:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+f\left(kgrid,Agrid\right)+\left(1-\delta\right)kgrid-kpgrid
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We obain:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+f\left(k_{0},A_{0}\right) & ... & f\left(k_{n-1},A_{0}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+f\left(k_{0},A_{0}\right) & ... & f\left(k_{n-1},A_{0}\right)
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+f\left(k_{0},A_{m-1}\right) & ... & f\left(k_{n-1},A_{m-1}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+f\left(k_{0},A_{m-1}\right) & ... & f\left(k_{n-1},A_{m-1}\right)
+\end{array}\right]
+\end{array}\right]+\left(1-\delta\right)\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+k_{0} & ... & k_{n-1}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+k_{0} & ... & k_{n-1}
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+k_{0} & ... & k_{n-1}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+k_{0} & ... & k_{n-1}
+\end{array}\right]
+\end{array}\right]-\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+k_{0}^{\prime} & ... & k_{0}^{\prime}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+k_{n-1}^{\prime} & ... & k_{n-1}^{\prime}
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+k_{0}^{\prime} & ... & k_{0}^{\prime}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+k_{n-1}^{\prime} & ... & k_{n-1}^{\prime}
+\end{array}\right]
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+=\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+f\left(k_{0},A_{0}\right)+\left(1-\delta\right)k_{0}-k_{0}^{\prime} & ... & f\left(k_{n-1},A_{0}\right)+\left(1-\delta\right)k_{n-1}-k_{0}^{\prime}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+f\left(k_{0},A_{0}\right)+\left(1-\delta\right)k_{0}-k_{n-1}^{\prime} & ... & f\left(k_{n-1},A_{0}\right)+\left(1-\delta\right)k_{n-1}-k_{n-1}^{\prime}
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+f\left(k_{0},A_{m-1}\right)+\left(1-\delta\right)k_{0}-k_{0}^{\prime} & ... & f\left(k_{n-1},A_{m-1}\right)+\left(1-\delta\right)k_{n-1}-k_{0}^{\prime}\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+f\left(k_{0},A_{m-1}\right)+\left(1-\delta\right)k_{0}-k_{n-1}^{\prime} & ... & f\left(k_{n-1},A_{m-1}\right)+\left(1-\delta\right)k_{n-1}-k_{n-1}^{\prime}
+\end{array}\right]
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace medskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This is what is called 
+\begin_inset Formula $ctemp$
+\end_inset
+
+ in our program.
+ 
+\begin_inset Formula $ctemp\left(i,j,s\right)$
+\end_inset
+
+ is the level of consumption obtained with initial productivity 
+\begin_inset Formula $A_{i}$
+\end_inset
+
+, initial capital 
+\begin_inset Formula $k_{j}$
+\end_inset
+
+ and next period capital 
+\begin_inset Formula $k_{s}^{\prime}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace medskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Of course, as we want consumption to be positive, we should check which
+ of these values are positive.
+ The 
+\shape italic
+if
+\shape default
+ statement does not work well with vectors and should be avoided.
+ There are different ways of doing it but one efficient way is 
+\shape italic
+boolean indexing 
+\shape default
+(see Chapter 5 of 
+\shape italic
+A primer on scientific Python 
+\shape default
+for more details).
+ In our program, this is done with the line of code:
+\end_layout
+
+\begin_layout Standard
+budget_not = ( (production(k,p,A) + (1 - p['delta']) * k - kp) < 0 
+\end_layout
+
+\begin_layout Standard
+The result is a vector of the same shape as 
+\begin_inset Formula $ctemp$
+\end_inset
+
+ but filled with booleans values: ones when consumption gets negative and
+ zeros otherwise.
+ 
+\end_layout
+
+\begin_layout Standard
+We then associate a very low level of consumption (0.001) to these values,
+ plus we penalize them with a very large negative utility which makes that
+ a household will never want to have negative consumption (we know from
+ our utility functions that there is infinite marginal utility at zero consumpti
+on).
+ This avoids numerical issues.
+\end_layout
+
+\begin_layout Standard
+We use this to compute 
+\begin_inset Formula $utemp=u\left(ctemp\right)$
+\end_inset
+
+
+\begin_inset VSpace medskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Remember that at the end we want to find 
+\begin_inset Formula $TV\left(k,A\right)$
+\end_inset
+
+.
+ The way our problem is built suggests that the matrices 
+\begin_inset Formula $V_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $TV$
+\end_inset
+
+ should be respectively:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+V_{0}\left(k_{0},A_{0}\right) & ... & V_{0}\left(k_{n-1},A_{0}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+V_{0}\left(k_{0},A_{0}\right) & ... & V_{0}\left(k_{n-1},A_{0}\right)
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+V_{0}\left(k_{0},A_{m-1}\right) & ... & V_{0}\left(k_{n-1},A_{m-1}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+V_{0}\left(k_{0},A_{m-1}\right) & ... & V_{0}\left(k_{n-1},A_{m-1}\right)
+\end{array}\right]
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+TV\left(k_{0},A_{0}\right) & ... & TV\left(k_{n-1},A_{0}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+TV\left(k_{0},A_{0}\right) & ... & TV\left(k_{n-1},A_{0}\right)
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+TV\left(k_{0},A_{m-1}\right) & ... & TV\left(k_{n-1},A_{m-1}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+TV\left(k_{0},A_{m-1}\right) & ... & TV\left(k_{n-1},A_{m-1}\right)
+\end{array}\right]
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace medskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This latter matrix is obtained by performing the following procedure.
+ 
+\end_layout
+
+\begin_layout Standard
+Build a modified version of 
+\begin_inset Formula $V_{0}$
+\end_inset
+
+ called 
+\begin_inset Formula $VP_{0}$
+\end_inset
+
+ which has the following form:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+V_{0}\left(k_{0}^{\prime},A_{0}\right) & ... & V_{0}\left(k_{0}^{\prime},A_{0}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+V_{0}\left(k_{n-1}^{\prime},A_{0}\right) & ... & V_{0}\left(k_{n-1}^{\prime},A_{0}\right)
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+V_{0}\left(k_{0}^{\prime},A_{m-1}\right) & ... & V_{0}\left(k_{0}^{\prime},A_{m-1}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+V_{0}\left(k_{n-1}^{\prime},A_{m-1}\right) & ... & V_{0}\left(k_{n-1}^{\prime},A_{m-1}\right)
+\end{array}\right]
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Compute for 
+\begin_inset Formula $i\in[0,m-1]$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+utemp[i]=utemp[i]+\beta\times\sum_{j=0}^{m-1}p_{ij}VP_{0}[j]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the end this gives us a 
+\begin_inset Formula $utemp$
+\end_inset
+
+ matrix of the following form:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\left[\begin{array}{ccc}
+utemp\left(A_{0},k_{0},k_{0}^{\prime}\right) & ... & utemp\left(A_{0},k_{n-1},k_{0}^{\prime}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+utemp\left(A_{0},k_{0},k_{n-1}^{\prime}\right) & ... & utemp\left(A_{0},k_{n-1},k_{n-1}^{\prime}\right)
+\end{array}\right]\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+\left[\begin{array}{ccc}
+utemp\left(A_{m-1},k_{0},k_{0}^{\prime}\right) & ... & utemp\left(A_{m-1},k_{n-1},k_{0}^{\prime}\right)\\
+\begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array} & \begin{array}{c}
+.\\
+.\\
+.
+\end{array}\\
+utemp\left(A_{m-1},k_{0},k_{n-1}^{\prime}\right) & ... & ...utemp\left(A_{m-1},k_{n-1},k_{n-1}^{\prime}\right)
+\end{array}\right]
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With element 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $utemp\left(A_{s},k_{i},k_{j}^{\prime}\right)$
+\end_inset
+
+ being the expected utility level obtained when choosing 
+\begin_inset Formula $k_{j}^{\prime}$
+\end_inset
+
+ knowing that the household has initial capital 
+\begin_inset Formula $k_{i}$
+\end_inset
+
+ and initial productivity 
+\begin_inset Formula $A_{s}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+We finally need to pick column by column in our matrices the biggest element.
+ For instance, the biggest element of the first column of our first sub-matrix
+ in 
+\begin_inset Formula $utemp$
+\end_inset
+
+ will become the element that will fill the whole first column of our first
+ submatrix in 
+\begin_inset Formula $TV$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+We then repeat the procedure until convergence.
+ 
+\end_layout
+
+\end_body
+\end_document
