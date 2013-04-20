@@ -18,7 +18,7 @@ p = {'alpha': 0.3, 'beta': 0.95, 'sigma': 1, 'delta': 0.3 }
 
 """create a dictionary for the shocks"""
 
-shock = { 'A': np.array([0.85,1.15]) , 'transit': np.array([[0.5,0.5],[0.5,0.5]]) } 
+shock = { 'A': np.array([0.85,0.9,0.95,1,1.05,1.1,1.15]) , 'transit': np.array([[0.15,0.15,0.15,0.15,0.15,0.15,0.1],[0.15,0.15,0.15,0.15,0.15,0.15,0.1],[0.15,0.15,0.15,0.15,0.15,0.15,0.1],[0.15,0.15,0.15,0.15,0.15,0.15,0.1],[0.15,0.15,0.15,0.15,0.15,0.15,0.1],[0.15,0.15,0.15,0.15,0.15,0.15,0.1],[0.15,0.15,0.15,0.15,0.15,0.15,0.1]]) } 
 
 
 
@@ -142,4 +142,8 @@ kgrid2 = np.linspace(pgrid['kmin'],pgrid['kmax'],pgrid['n'])
    
 pylab.plot(kgrid2,V0[0,0,:])
 pylab.plot(kgrid2,V0[1,0,:])
-
+pylab.plot(kgrid2,V0[2,0,:])
+pylab.plot(kgrid2,V0[3,0,:])
+pylab.plot(kgrid2,V0[4,0,:])
+pylab.plot(kgrid2,V0[5,0,:])
+pylab.plot(kgrid2,V0[6,0,:])
