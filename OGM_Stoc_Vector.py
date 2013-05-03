@@ -39,7 +39,9 @@ kpgrid   = np.array( [ [np.array([kgrid[0,0,i] for j in xrange(pgrid['n'])]) for
 # first line of the matrix corresponds to the first level of productivity
 # first column corresponds to the first level of capital 
     
-V0 = np.array([ [ np.zeros(pgrid['n']) for k in xrange(pgrid['n']) ] for j in xrange(len(shock['A']))] )   
+
+V0 = np.zeros( ( len(shock['A']), pgrid['n'] ) )
+
 
 """
 V00       = np.zeros(pgrid['n'])          # value function for first state of productivity
@@ -48,21 +50,26 @@ V01       = np.zeros(pgrid['n'])          # value function for second state of p
 
 """ we then define the functions of the model"""
 
+import numexpr
 def utility(c,p):
     # this is the utility function 
     # c is consumption
     # p is the dictionary of parameters
-    if p['sigma'] == 1:
-        return np.log(c)
+
+    ps = p['sigma']
+    if ps == 1:
+        return numexpr.evaluate( 'log(c)' )
     else:
-        return ( c**(1 - p['sigma']) ) / ( 1 - p['sigma'] )
+        return numexpr.evaluate( 'c**(1 - ps) / ( 1 - ps )' )
         
+
 
 def production(k,p,A):
     # this is the production function of the model
     # k is capital
     # p is a dictionary of parameters
-    return A * k**(p['alpha'])
+    pp = p['alpha']
+    return numexpr.evaluate('A * k**pp')
     
     
 def new_value(k,kp,V0,p,pgrid,A,shock):
@@ -79,34 +86,22 @@ def new_value(k,kp,V0,p,pgrid,A,shock):
     # values
     
     
-    new_V0 = np.array([ [ np.zeros(pgrid['n']) for z in xrange(pgrid['n']) ] for j in xrange(len(shock['A']))] )   
+#    new_V0 = np.array([ [ np.zeros(pgrid['n']) for z in xrange(pgrid['n']) ] for j in xrange(len(shock['A']))] )   
+#    new_V0 = np.zeros( ( len(shock['A']), pgrid['n'], pgrid['n'] ) )
 
-    budget_not           = ((production(k,p,A) + (1 - p['delta']) * k - kp) < 0)
-    
-    ctemp               = production(k,p,A) + (1 - p['delta']) * k - kp
-    
+
+    prod = production(k, p, A)
+    ctemp               = prod + (1 - p['delta']) * k - kp
+    budget_not           = ctemp < 0    
     ctemp[budget_not]  = 0.001  
    
     utemp               = utility(ctemp,p)
-    
-    VP0                 = np.array([ [ np.linspace(V0[i,0,z],V0[i,0,z],pgrid['n']) for z in xrange(pgrid['n']) ] for i in xrange(len(shock['A'])) ] )
-      
-    for i in xrange(len(shock['A'])):
-        
-        for j in xrange(len(shock['A'])):
-            
-            utemp[i] += p['beta'] *  shock['transit'][i,j] * VP0[j]
-     
     utemp[budget_not] = -99999999
-    
-    Vtemp        = utemp.reshape(len(shock['A']),pgrid['n']*pgrid['n'])
-    
 
-    for i in xrange(len(shock['A'])):
-                
-        for z in xrange(pgrid['n']):
-            
-            new_V0[i,:,z] = max(Vtemp[i][z::pgrid['n']])
+    P = shock['transit']
+    VP0 = utemp + (p['beta'] * np.dot( P, V0 ))[:,:,None]
+
+    new_V0 = VP0.max(axis=1)
             
              
     return new_V0
@@ -115,30 +110,42 @@ def new_value(k,kp,V0,p,pgrid,A,shock):
 
 """ Now we run the algorithm """
 
-crit    = 100
-epsilon = 10**(-6)
+def solve_value( kgrid,kpgrid,V0,p,pgrid,Agrid,shock ):
 
-while crit > epsilon:
+    import time
+
+    crit    = 100
+    epsilon = 10**(-6)
+    maxit = 1000
+    it = 0
+    while crit > epsilon and it < maxit:
     
-    TV  = new_value(kgrid,kpgrid,V0,p,pgrid,Agrid,shock)
+        it += 1
     
-    critmat      = abs(V0[:,0,:]-TV[:,0,:]).reshape(1,pgrid['n']*len(shock['A']))
-    crit         = max(critmat[0])
+        t1 = time.time()
     
+        TV  = new_value(kgrid,kpgrid,V0,p,pgrid,Agrid,shock)
+        
+        crit      = abs(V0-TV).max()
     
-    V0        = TV
+        t2 = time.time()
+       
+        print('Iteration {:5} . Error : {:6.3f}. Elapsed : {:6.3f}'.format(it, crit, t2-t1))
+        
+        V0        = TV
 
+    return V0
 
+#V0 = solve_value( kgrid,kpgrid,V0,p,pgrid,Agrid,shock )
 
-  
-import pylab
+#import pylab
 
-kgrid2 = np.linspace(pgrid['kmin'],pgrid['kmax'],pgrid['n'])
+#kgrid2 = np.linspace(pgrid['kmin'],pgrid['kmax'],pgrid['n'])
    
-pylab.plot(kgrid2,V0[0,0,:])
-pylab.plot(kgrid2,V0[1,0,:])
-pylab.plot(kgrid2,V0[2,0,:])
-pylab.plot(kgrid2,V0[3,0,:])
-pylab.plot(kgrid2,V0[4,0,:])
-pylab.plot(kgrid2,V0[5,0,:])
-pylab.plot(kgrid2,V0[6,0,:])
+#pylab.plot(kgrid2,V0[0,0,:])
+#pylab.plot(kgrid2,V0[1,0,:])
+#pylab.plot(kgrid2,V0[2,0,:])
+#pylab.plot(kgrid2,V0[3,0,:])
+#pylab.plot(kgrid2,V0[4,0,:])
+#pylab.plot(kgrid2,V0[5,0,:])
+#pylab.plot(kgrid2,V0[6,0,:])
